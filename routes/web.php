@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\ReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -77,4 +78,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->as('admin.')->group(funct
 
     // Quản lý sản phẩm (CRUD đầy đủ)
     Route::resource('products', AdminProductController::class);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 });

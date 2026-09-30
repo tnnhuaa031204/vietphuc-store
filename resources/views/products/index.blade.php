@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hoa Nghiêm Việt Phục - Di Sản & Cổ Phục Việt</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -30,6 +31,12 @@
             padding: 100px 0;
             border-bottom: 4px solid #8b0000;
         }
+        /* Filter Card */
+        .filter-card {
+            background-color: #fffaf0;
+            border: 1px solid #e0d8c3;
+            border-radius: 8px;
+        }
         /* Product Cards */
         .card-product {
             border: 1px solid #e0d8c3;
@@ -39,6 +46,7 @@
         .card-product:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(107, 17, 16, 0.15) !important;
+            border-color: #d4af37;
         }
         .card-img-top {
             height: 320px;
@@ -85,29 +93,75 @@
 
     <!-- Danh sách sản phẩm -->
     <div class="container my-5" id="products-list">
-        <div class="text-center mb-5">
+        <div class="text-center mb-4">
             <h2 class="fw-bold text-uppercase" style="color: #6b1110;">Danh Mục Sắc Phục</h2>
             <div style="width: 80px; height: 3px; background-color: #d4af37; margin: 10px auto;"></div>
         </div>
 
+        <!-- Bộ Lọc & Tìm Kiếm -->
+        <form action="{{ route('products.index') }}" method="GET" class="card card-body filter-card shadow-sm mb-5">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="keyword" class="form-control" placeholder="Tìm tên sắc phục, họa tiết..." value="{{ request('keyword') }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="category_id" class="form-select">
+                        <option value="">-- Tất cả kiểu dáng --</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="min_price" class="form-control" placeholder="Giá từ..." value="{{ request('min_price') }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="max_price" class="form-control" placeholder="Đến giá..." value="{{ request('max_price') }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="sort" class="form-select" onchange="this.form.submit()">
+                        <option value="">Mới nhất</option>
+                        <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
+                        <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
+                        <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Tên A-Z</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3 text-end">
+                <button type="submit" class="btn btn-gold px-4 me-2">Lọc / Tìm kiếm</button>
+                <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">Xóa lọc</a>
+            </div>
+        </form>
+
+        <!-- Lưới sản phẩm -->
         <div class="row g-4">
-            @foreach($products as $product)
-            <!-- Sửa ở đây: col-lg-3 sẽ chia lưới 12/3 = 4 sản phẩm 1 hàng trên màn hình lớn -->
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                <div class="card card-product h-100 shadow-sm">
-                    <img src="{{ asset($product->image ?? 'images/products/default.jpg') }}" class="card-img-top" alt="{{ $product->name }}">
-                    <div class="card-body d-flex flex-column text-center">
-                        <span class="badge badge-cat align-self-center mb-2 px-3 py-1">{{ $product->category->name ?? 'Chưa phân loại' }}</span>
-                        <h5 class="card-title fw-bold my-2">{{ $product->name }}</h5>
-                        <p class="card-text text-muted small flex-grow-1">{{ Str::limit($product->description, 90) }}</p>
-                        <div class="mt-3">
-                            <div class="price-text fs-5 mb-3">{{ number_format($product->price, 0, ',', '.') }} đ</div>
-                            <a href="{{ route('products.show', $product->slug) }}" class="btn btn-gold w-100">Xem Chi Tiết</a>
+            @forelse($products as $product)
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card card-product h-100 shadow-sm">
+                        <img src="{{ asset($product->image ?? 'images/products/default.jpg') }}" class="card-img-top" alt="{{ $product->name }}">
+                        <div class="card-body d-flex flex-column text-center">
+                            <span class="badge badge-cat align-self-center mb-2 px-3 py-1">{{ $product->category->name ?? 'Chưa phân loại' }}</span>
+                            <h5 class="card-title fw-bold my-2">{{ $product->name }}</h5>
+                            <p class="card-text text-muted small flex-grow-1">{{ Str::limit($product->description, 90) }}</p>
+                            <div class="mt-3">
+                                <div class="price-text fs-5 mb-3">{{ number_format($product->price, 0, ',', '.') }} đ</div>
+                                <a href="{{ route('products.show', $product->slug ?? $product->id) }}" class="btn btn-gold w-100">Xem Chi Tiết</a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            @endforeach
+            @empty
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted fs-5">Không tìm thấy sản phẩm nào phù hợp với điều kiện tìm kiếm.</p>
+                </div>
+            @endforelse
+        </div>
+
+        <!-- Thanh Phân Trang -->
+        <div class="d-flex justify-content-center mt-5">
+            {{ $products->links() }}
         </div>
     </div>
 
