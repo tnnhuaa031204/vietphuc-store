@@ -71,7 +71,7 @@
                         <div id="qr-box" class="text-center my-3 p-3 bg-white border rounded"
                              style="display: {{ old('payment_method') === 'qr' ? 'block' : 'none' }};">
                             <p class="fw-bold mb-2">Mã QR thanh toán</p>
-                            <img src="{{ asset('images/qr-payment.png') }}"
+                            <img src="{{ asset('images/qr-payment.jpg') }}"
                                  class="img-fluid border p-2" style="max-width: 250px;" alt="QR Code">
                             <p class="text-muted small mb-0 mt-2">
                                 Nội dung chuyển khoản: <strong>DH{{ $order->id }}</strong>

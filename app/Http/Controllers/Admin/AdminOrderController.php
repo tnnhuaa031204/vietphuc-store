@@ -39,14 +39,14 @@ class AdminOrderController extends Controller
         $oldStatus = $order->order_status;
         $newStatus = $validated['order_status'];
 
-        // ✅ Nếu trạng thái không đổi → không làm gì
+        // Nếu trạng thái không đổi → không làm gì
         if ($oldStatus === $newStatus) {
             return back()->with('success', 'Trạng thái đơn hàng không thay đổi.');
         }
 
         DB::beginTransaction();
         try {
-            // ✅ ROLLBACK TỒN KHO: Hủy đơn → cộng lại stock
+            // ROLLBACK TỒN KHO: Hủy đơn → cộng lại stock
             if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
                 foreach ($order->details as $detail) {
                     if ($detail->product) {
@@ -55,9 +55,8 @@ class AdminOrderController extends Controller
                 }
             }
 
-            // ✅ ROLLBACK TỒN KHO: Từ cancelled → trạng thái khác → trừ lại stock
+            // ROLLBACK TỒN KHO: Từ cancelled → trạng thái khác → trừ lại stock
             if ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
-                // Kiểm tra tồn kho trước khi trừ
                 foreach ($order->details as $detail) {
                     if ($detail->product && $detail->product->stock < $detail->quantity) {
                         DB::rollBack();
@@ -88,6 +87,7 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
         }
     }
+
     // ==========================================
     // CẬP NHẬT TRẠNG THÁI THANH TOÁN
     // ==========================================
@@ -97,12 +97,8 @@ class AdminOrderController extends Controller
             'payment_status' => 'required|in:unpaid,pending,paid',
         ]);
 
-        // ✅ Chỉ cho phép đổi trạng thái thanh toán cho đơn COD
-        // (đơn QR đã có logic xác nhận riêng)
-        if ($order->payment_method !== 'cod' && $validated['payment_status'] === 'paid') {
-            return back()->with('error', 'Chỉ có thể đánh dấu "đã thanh toán" cho đơn hàng COD.');
-        }
-
+        // ✅ Admin có thể cập nhật cho cả COD và QR
+        // (với QR tĩnh, admin xác nhận thủ công sau khi kiểm tra tài khoản ngân hàng)
         $order->update([
             'payment_status' => $validated['payment_status'],
         ]);

@@ -34,5 +34,7 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+    'sepay' => [
+    'webhook_token' => env('SEPAY_WEBHOOK_TOKEN'),
+    ],
 ];
