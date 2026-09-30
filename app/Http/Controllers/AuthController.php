@@ -30,13 +30,19 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
 
+            // ✅ XÓA intended URL cũ để tránh redirect về /admin/dashboard
+            $request->session()->forget('url.intended');
+
             // KIỂM TRA QUYỀN ADMIN ĐỂ ĐIỀU HƯỚNG
             $user = Auth::user();
             if ($user->role === 'admin' || $user->is_admin == 1) {
-                return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập trang Admin thành công!');
+                return redirect()->route('admin.dashboard')
+                    ->with('success', 'Đăng nhập trang Admin thành công!');
             }
 
-            return redirect()->intended('/')->with('success', 'Đăng nhập thành công!');
+            // ✅ User thường → về trang chủ, KHÔNG dùng intended()
+            return redirect()->route('products.index')
+                ->with('success', 'Đăng nhập thành công!');
         }
 
         return back()->withErrors([
@@ -73,12 +79,13 @@ class AuthController extends Controller
             'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone'    => $validated['phone'] ?? null,
-            'role'     => 'user', // Mặc định tài khoản mới đăng ký là user thường
+            'role'     => 'user',
         ]);
 
         Auth::login($user);
 
-        return redirect()->route('products.index')->with('success', 'Đăng ký tài khoản thành công!');
+        return redirect()->route('products.index')
+            ->with('success', 'Đăng ký tài khoản thành công!');
     }
 
     public function logout(Request $request)
@@ -86,6 +93,10 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // ✅ Xóa intended URL khi đăng xuất
+        $request->session()->forget('url.intended');
+
         return redirect()->route('login.form');
     }
 }

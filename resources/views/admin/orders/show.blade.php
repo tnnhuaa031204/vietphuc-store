@@ -16,46 +16,30 @@
 </head>
 <body>
     <div class="d-flex">
-        <!-- Sidebar Menu -->
+        {{-- Sidebar --}}
         <div class="sidebar p-3" style="width: 260px;">
             <h4 class="fw-bold mb-4 text-warning text-center">HOA NGHIÊM ADMIN</h4>
-            
             <a href="{{ route('admin.dashboard') }}" class="mb-1">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
-
-            <!-- QUẢN LÝ SẢN PHẨM -->
-            <div class="menu-heading">Quản lý Sản phẩm</div>
-            <a href="{{ route('admin.products.index') }}" class="mb-1">
-                <i class="bi bi-box-seam me-2"></i> Danh sách sản phẩm
-            </a>
-            <a href="{{ route('admin.products.create') }}" class="mb-1">
-                <i class="bi bi-plus-circle me-2"></i> Thêm sản phẩm mới
-            </a>
-
-            <!-- QUẢN LÝ ĐƠN HÀNG -->
-            <div class="menu-heading">Quản lý Đơn hàng</div>
+            <div class="menu-heading">Quản lý đơn hàng</div>
             <a href="{{ route('admin.orders.index') }}" class="mb-1 active fw-bold">
-                <i class="bi bi-cart-check me-2"></i> Quản lý Đơn hàng
+                <i class="bi bi-cart-check me-2"></i> Quản lý đơn hàng
             </a>
-
-            <!-- HỆ THỐNG -->
-            <div class="menu-heading">Hệ thống</div>
-            <a href="{{ route('products.index') }}" class="mb-1" target="_blank">
-                <i class="bi bi-house me-2"></i> Xem Trang chủ
+            <div class="menu-heading">Quản lý sản phẩm</div>
+            <a href="{{ route('admin.products.index') }}" class="mb-1">
+                <i class="bi bi-box-seam me-2"></i> Sản phẩm
             </a>
-
-            <hr class="border-secondary">
-            
+            <hr class="text-warning">
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="btn btn-outline-warning w-100 mt-2">
+                <button type="submit" class="btn btn-outline-warning w-100">
                     <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
                 </button>
             </form>
         </div>
 
-        <!-- Main Content -->
+        {{-- Main Content --}}
         <div class="p-4 flex-grow-1">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="fw-bold mb-0" style="color: #6b1110;">CHI TIẾT ĐƠN HÀNG #{{ $order->id }}</h2>
@@ -67,37 +51,52 @@
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
 
             <div class="row">
-                <!-- Thông tin người nhận -->
+                {{-- Thông tin khách hàng --}}
                 <div class="col-md-5 mb-4">
-                    <div class="card shadow-sm border-0 h-100">
+                    <div class="card shadow-sm border-0">
                         <div class="card-header bg-white fw-bold" style="color: #6b1110;">
                             Thông Tin Khách Hàng
                         </div>
                         <div class="card-body">
-                            <p><strong>Tên khách hàng:</strong> {{ $order->customer_name ?? $order->user->name ?? 'N/A' }}</p>
-                            <p><strong>Số điện thoại:</strong> {{ $order->phone ?? 'N/A' }}</p>
-                            <p><strong>Địa chỉ giao hàng:</strong> {{ $order->address ?? 'N/A' }}</p>
-                            <p><strong>Ghi chú:</strong> {{ $order->note ?? 'Không có ghi chú' }}</p>
-                            <p><strong>Ngày đặt hàng:</strong> {{ $order->created_at ? $order->created_at->format('d/m/Y H:i:s') : '' }}</p>
+                            <p><strong>Họ tên:</strong> {{ $order->customer_name }}</p>
+                            <p><strong>Số điện thoại:</strong> {{ $order->customer_phone }}</p>
+                            @if($order->customer_email)
+                                <p><strong>Email:</strong> {{ $order->customer_email }}</p>
+                            @endif
+                            <p><strong>Địa chỉ giao hàng:</strong> {{ $order->shipping_address }}</p>
+                            <p><strong>Ngày đặt hàng:</strong> {{ $order->created_at?->format('d/m/Y H:i:s') }}</p>
+                            <p><strong>Phương thức TT:</strong>
+                                <span class="badge bg-info text-dark">{{ strtoupper($order->payment_method) }}</span>
+                            </p>
+                            <p><strong>Trạng thái TT:</strong>
+                                @if($order->payment_status === 'paid')
+                                    <span class="badge bg-success">Đã thanh toán</span>
+                                @elseif($order->payment_status === 'pending')
+                                    <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                @else
+                                    <span class="badge bg-danger">Chưa thanh toán</span>
+                                @endif
+                            </p>
 
                             <hr>
 
-                            <!-- Cập nhật trạng thái đơn hàng -->
+                            {{-- Cập nhật trạng thái đơn hàng --}}
                             <form action="{{ route('admin.orders.updateStatus', $order->id) }}" method="POST">
                                 @csrf
                                 @method('PATCH')
                                 <label class="form-label fw-bold">Cập nhật trạng thái đơn hàng:</label>
                                 <div class="input-group">
-                                    <select name="status" class="form-select">
-                                        <option value="pending" {{ ($order->status ?? '') == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
-                                        <option value="processing" {{ ($order->status ?? '') == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-                                        <option value="completed" {{ ($order->status ?? '') == 'completed' ? 'selected' : '' }}>Đã hoàn thành</option>
-                                        <option value="cancelled" {{ ($order->status ?? '') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
+                                    <select name="order_status" class="form-select">
+                                        <option value="pending"    {{ $order->order_status == 'pending'    ? 'selected' : '' }}>Chờ xác nhận</option>
+                                        <option value="confirmed"  {{ $order->order_status == 'confirmed'  ? 'selected' : '' }}>Đã xác nhận</option>
+                                        <option value="shipping"   {{ $order->order_status == 'shipping'   ? 'selected' : '' }}>Đang giao</option>
+                                        <option value="completed"  {{ $order->order_status == 'completed'  ? 'selected' : '' }}>Hoàn thành</option>
+                                        <option value="cancelled"  {{ $order->order_status == 'cancelled'  ? 'selected' : '' }}>Đã hủy</option>
                                     </select>
                                     <button type="submit" class="btn btn-primary">Lưu</button>
                                 </div>
@@ -106,7 +105,7 @@
                     </div>
                 </div>
 
-                <!-- Danh sách sản phẩm trong đơn -->
+                {{-- Danh sách sản phẩm --}}
                 <div class="col-md-7 mb-4">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white fw-bold" style="color: #6b1110;">
@@ -123,26 +122,28 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @if(isset($order->items) && count($order->items) > 0)
-                                        @foreach($order->items as $item)
-                                            <tr>
-                                                <td><strong>{{ $item->product->name ?? $item->product_name ?? 'Sản phẩm' }}</strong></td>
-                                                <td>{{ number_format($item->price, 0, ',', '.') }} đ</td>
-                                                <td>{{ $item->quantity }}</td>
-                                                <td class="text-end fw-bold">{{ number_format($item->price * $item->quantity, 0, ',', '.') }} đ</td>
-                                            </tr>
-                                        @endforeach
-                                    @else
+                                    @forelse($order->details as $item)
                                         <tr>
-                                            <td colspan="4" class="text-center py-3 text-muted">Không có thông tin chi tiết sản phẩm.</td>
+                                            <td><strong>{{ $item->product_name }}</strong></td>
+                                            <td>{{ number_format($item->price, 0, ',', '.') }} đ</td>
+                                            <td>{{ $item->quantity }}</td>
+                                            <td class="text-end fw-bold">
+                                                {{ number_format($item->subtotal, 0, ',', '.') }} đ
+                                            </td>
                                         </tr>
-                                    @endif
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center py-3 text-muted">
+                                                Không có thông tin chi tiết sản phẩm.
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                                 <tfoot>
                                     <tr class="table-light">
                                         <td colspan="3" class="fw-bold text-end">Tổng tiền:</td>
                                         <td class="text-end text-danger fw-bold fs-5">
-                                            {{ number_format($order->total_price ?? $order->total ?? 0, 0, ',', '.') }} đ
+                                            {{ number_format($order->total_amount, 0, ',', '.') }} đ
                                         </td>
                                     </tr>
                                 </tfoot>

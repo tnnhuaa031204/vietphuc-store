@@ -45,65 +45,57 @@
                 <div class="col-md-7">
                     <div class="card p-4 border-0 shadow-sm" style="border-radius: 8px;">
                         <h5 class="fw-bold mb-3" style="color: #6b1110;">1. Người Nhận Hàng</h5>
-                        
+
+                        {{-- ✅ ĐỔI: fullname → customer_name --}}
                         <div class="mb-3">
-                            <label for="fullname" class="form-label fw-bold">Họ và tên người nhận</label>
-                            <input type="text" name="fullname" id="fullname" 
-                                   class="form-control @error('fullname') is-invalid @enderror" 
-                                   value="{{ old('fullname', auth()->user()->name ?? '') }}">
-                            @error('fullname')
+                            <label for="customer_name" class="form-label fw-bold">Họ và tên người nhận</label>
+                            <input type="text" name="customer_name" id="customer_name"
+                                   class="form-control @error('customer_name') is-invalid @enderror"
+                                   value="{{ old('customer_name', auth()->user()->name ?? '') }}">
+                            @error('customer_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
+                        {{-- ✅ ĐỔI: phone → customer_phone --}}
                         <div class="mb-3">
-                            <label for="phone" class="form-label fw-bold">Số điện thoại</label>
-                            <input type="text" name="phone" id="phone" 
-                                   class="form-control @error('phone') is-invalid @enderror" 
-                                   value="{{ old('phone', auth()->user()->phone ?? '') }}">
-                            @error('phone')
+                            <label for="customer_phone" class="form-label fw-bold">Số điện thoại</label>
+                            <input type="text" name="customer_phone" id="customer_phone"
+                                   class="form-control @error('customer_phone') is-invalid @enderror"
+                                   value="{{ old('customer_phone', auth()->user()->phone ?? '') }}">
+                            @error('customer_phone')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
+                        {{-- ✅ THÊM: customer_email (khớp migration) --}}
+                        <div class="mb-3">
+                            <label for="customer_email" class="form-label fw-bold">Email (Không bắt buộc)</label>
+                            <input type="email" name="customer_email" id="customer_email"
+                                   class="form-control @error('customer_email') is-invalid @enderror"
+                                   value="{{ old('customer_email', auth()->user()->email ?? '') }}">
+                            @error('customer_email')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- ✅ ĐỔI: shipping_address giữ nguyên --}}
                         <div class="mb-3">
                             <label for="shipping_address" class="form-label fw-bold">Địa chỉ giao hàng chi tiết</label>
-                            <textarea name="shipping_address" id="shipping_address" rows="3" 
-                                      class="form-control @error('shipping_address') is-invalid @enderror" 
+                            <textarea name="shipping_address" id="shipping_address" rows="3"
+                                      class="form-control @error('shipping_address') is-invalid @enderror"
                                       placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố">{{ old('shipping_address') }}</textarea>
                             @error('shipping_address')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <div class="mb-3">
-                            <label for="note" class="form-label fw-bold">Ghi chú (Không bắt buộc)</label>
-                            <textarea name="note" id="note" rows="2" class="form-control" placeholder="Ghi chú thêm về thời gian giao hàng hoặc chỉ dẫn địa chỉ">{{ old('note') }}</textarea>
-                        </div>
+                        {{-- ❌ XÓA: note (không có trong migration) --}}
+                        {{-- Nếu bạn muốn giữ note, phải thêm cột note vào migration orders --}}
 
-                        <h5 class="fw-bold mt-4 mb-3" style="color: #6b1110;">2. Phương Thức Thanh Toán</h5>
-                        
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="payment_method" id="cod" value="cod" {{ old('payment_method', 'cod') == 'cod' ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold" for="cod">
-                                Thanh toán khi nhận hàng (COD)
-                            </label>
+                        <div class="alert alert-info small mb-0">
+                            <i class="bi bi-info-circle"></i> Phương thức thanh toán sẽ được chọn ở bước tiếp theo.
                         </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="payment_method" id="vnpay" value="vnpay" {{ old('payment_method') == 'vnpay' ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold" for="vnpay">
-                                Thanh toán qua VNPay
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="payment_method" id="momo" value="momo" {{ old('payment_method') == 'momo' ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold" for="momo">
-                                Ví MoMo
-                            </label>
-                        </div>
-                        @error('payment_method')
-                            <div class="text-danger small mb-2">{{ $message }}</div>
-                        @enderror
                     </div>
                 </div>
 
@@ -111,7 +103,7 @@
                 <div class="col-md-5">
                     <div class="card p-4 border-0 shadow-sm" style="border-radius: 8px;">
                         <h5 class="fw-bold mb-3" style="color: #6b1110;">Đơn Hàng Của Bạn</h5>
-                        
+
                         @php $total = 0; @endphp
                         <ul class="list-group list-group-flush mb-3">
                             @foreach($cart as $item)

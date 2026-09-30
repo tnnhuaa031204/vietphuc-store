@@ -11,11 +11,14 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $totalOrders = Order::count();
-        $totalProducts = Product::count();
-        $totalCustomers = User::where('role', 'customer')->count();
-        $recentOrders = Order::latest()->take(5)->get();
+    $totalOrders = Order::count();
+    $totalProducts = Product::count();
+    $totalCustomers = User::where('role', 'customer')->count();
+    $recentOrders = Order::latest()->take(5)->get();
 
-        return view('admin.dashboard', compact('totalOrders', 'totalProducts', 'totalCustomers', 'recentOrders'));
+    // ✅ Nếu view dùng $orders, đổi thành $orders
+    $orders = $recentOrders;
+
+    return view('admin.dashboard', compact('orders', 'totalOrders', 'totalProducts', 'totalCustomers'));
     }
 }

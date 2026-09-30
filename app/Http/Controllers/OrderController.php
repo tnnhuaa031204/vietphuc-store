@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\OrderItem;
+use App\Models\OrderDetail;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -30,57 +32,73 @@ class OrderController extends Controller
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng của bạn đang trống!');
         }
 
-        // Validate thông tin người nhận
         $validated = $request->validate([
-            'fullname'         => 'required|string|max:255',
-            'phone'            => 'required|regex:/^[0-9]{10,11}$/',
-            'shipping_address' => 'required|string|min:10|max:500',
-            'note'             => 'nullable|string|max:1000',
+            'customer_name'    => 'required|string|max:255',
+            'customer_phone'   => 'required|string|max:20',
+            'customer_email'   => 'nullable|email|max:255',
+            'shipping_address' => 'required|string|max:500|min:10',
         ], [
-            'fullname.required'         => 'Vui lòng nhập tên người nhận hàng.',
-            'phone.required'            => 'Vui lòng nhập số điện thoại nhận hàng.',
-            'phone.regex'               => 'Số điện thoại phải từ 10 đến 11 số.',
-            'shipping_address.required' => 'Vui lòng nhập địa chỉ giao hàng chi tiết.',
+            'customer_name.required'    => 'Vui lòng nhập họ tên.',
+            'customer_phone.required'   => 'Vui lòng nhập số điện thoại.',
+            'shipping_address.required' => 'Vui lòng nhập địa chỉ giao hàng.',
             'shipping_address.min'      => 'Địa chỉ giao hàng quá ngắn (tối thiểu 10 ký tự).',
         ]);
 
         DB::beginTransaction();
         try {
-            // Tính tổng tiền giỏ hàng
-            $totalAmount = array_sum(array_map(function ($item) {
-                return $item['price'] * $item['quantity'];
-            }, $cart));
+            // ✅ Lấy giá từ DB + kiểm tra tồn kho
+            $totalAmount = 0;
+            foreach ($cart as $productId => $item) {
+                $product = Product::findOrFail($productId);
 
-            // Tạo Đơn hàng tạm thời (chờ bước chọn thanh toán)
+                // ✅ Kiểm tra tồn kho
+                if ($item['quantity'] > $product->stock) {
+                    DB::rollBack();
+                    return back()->with(
+                        'error',
+                        "Sản phẩm '{$product->name}' chỉ còn {$product->stock} sản phẩm trong kho."
+                    )->withInput();
+                }
+
+                $totalAmount += $product->price * $item['quantity'];
+            }
+
+            // Tạo đơn hàng
             $order = Order::create([
                 'user_id'          => Auth::id(),
-                'fullname'         => $validated['fullname'],
-                'phone'            => $validated['phone'],
+                'customer_name'    => $validated['customer_name'],
+                'customer_phone'   => $validated['customer_phone'],
+                'customer_email'   => $validated['customer_email'] ?? null,
                 'shipping_address' => $validated['shipping_address'],
-                'note'             => $validated['note'] ?? null,
                 'total_amount'     => $totalAmount,
+                'payment_method'   => 'cod',
+                'payment_status'   => 'unpaid',
                 'order_status'     => 'pending',
-                'payment_method'   => null, // Sẽ cập nhật ở Bước 2
             ]);
 
-            // Lưu danh sách chi tiết sản phẩm
+            // ✅ Lưu chi tiết + trừ tồn kho
             foreach ($cart as $productId => $item) {
-                OrderItem::create([
-                    'order_id'   => $order->id,
-                    'product_id' => $productId,
-                    'quantity'   => $item['quantity'],
-                    'price'      => $item['price'],
+                $product = Product::findOrFail($productId);
+
+                OrderDetail::create([
+                    'order_id'     => $order->id,
+                    'product_id'   => $product->id,
+                    'product_name' => $product->name,
+                    'quantity'     => $item['quantity'],
+                    'price'        => $product->price,
+                    'subtotal'     => $product->price * $item['quantity'],
                 ]);
+
+                // ✅ Trừ tồn kho
+                $product->decrement('stock', $item['quantity']);
             }
 
             DB::commit();
-
-            // Chuyển hướng sang Bước 2: Chọn thanh toán
             return redirect()->route('checkout.payment', $order->id);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Đã xảy ra lỗi trong quá trình xử lý: ' . $e->getMessage())->withInput();
+            return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -90,7 +108,6 @@ class OrderController extends Controller
     public function paymentForm($id)
     {
         $order = Order::where('user_id', Auth::id())->findOrFail($id);
-
         return view('checkout.payment', compact('order'));
     }
 
@@ -99,21 +116,19 @@ class OrderController extends Controller
         $order = Order::where('user_id', Auth::id())->findOrFail($id);
 
         $validated = $request->validate([
-            'payment_method' => 'required|in:cod,vnpay,momo,bank_transfer',
+            'payment_method' => 'required|in:cod,qr',
         ], [
             'payment_method.required' => 'Vui lòng chọn hình thức thanh toán.',
             'payment_method.in'       => 'Phương thức thanh toán không hợp lệ.',
         ]);
 
-        // Cập nhật phương thức thanh toán vào DB
         $order->update([
             'payment_method' => $validated['payment_method'],
+            'payment_status' => $validated['payment_method'] === 'cod' ? 'unpaid' : 'pending',
         ]);
 
-        // Xóa giỏ hàng sau khi hoàn tất chọn thanh toán
         session()->forget('cart');
 
-        // Chuyển hướng sang Bước 3: Hoàn tất đơn hàng
         return redirect()->route('checkout.success', $order->id);
     }
 
@@ -122,8 +137,7 @@ class OrderController extends Controller
     // ==========================================
     public function success($id)
     {
-        $order = Order::with('items.product')->where('user_id', Auth::id())->findOrFail($id);
-
+        $order = Order::with('details.product')->where('user_id', Auth::id())->findOrFail($id);
         return view('checkout.success', compact('order'));
     }
 
@@ -133,7 +147,6 @@ class OrderController extends Controller
     public function mine()
     {
         $orders = Order::where('user_id', Auth::id())->latest()->paginate(5);
-
         return view('orders.mine', compact('orders'));
     }
 }
