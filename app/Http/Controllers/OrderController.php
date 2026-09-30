@@ -8,7 +8,6 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -46,12 +45,10 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
-            // ✅ Lấy giá từ DB + kiểm tra tồn kho
             $totalAmount = 0;
             foreach ($cart as $productId => $item) {
                 $product = Product::findOrFail($productId);
 
-                // ✅ Kiểm tra tồn kho
                 if ($item['quantity'] > $product->stock) {
                     DB::rollBack();
                     return back()->with(
@@ -63,7 +60,6 @@ class OrderController extends Controller
                 $totalAmount += $product->price * $item['quantity'];
             }
 
-            // Tạo đơn hàng
             $order = Order::create([
                 'user_id'          => Auth::id(),
                 'customer_name'    => $validated['customer_name'],
@@ -76,7 +72,6 @@ class OrderController extends Controller
                 'order_status'     => 'pending',
             ]);
 
-            // ✅ Lưu chi tiết + trừ tồn kho
             foreach ($cart as $productId => $item) {
                 $product = Product::findOrFail($productId);
 
@@ -89,7 +84,6 @@ class OrderController extends Controller
                     'subtotal'     => $product->price * $item['quantity'],
                 ]);
 
-                // ✅ Trừ tồn kho
                 $product->decrement('stock', $item['quantity']);
             }
 
@@ -148,5 +142,18 @@ class OrderController extends Controller
     {
         $orders = Order::where('user_id', Auth::id())->latest()->paginate(5);
         return view('orders.mine', compact('orders'));
+    }
+
+    // ==========================================
+    // XEM CHI TIẾT ĐƠN HÀNG CỦA USER
+    // ==========================================
+    public function show(Order $order)
+    {
+        // Kiểm tra quyền: user chỉ xem được đơn của mình
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        $order->load('details.product');
+
+        return view('orders.show', compact('order'));
     }
 }

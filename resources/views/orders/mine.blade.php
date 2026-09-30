@@ -42,6 +42,7 @@
                         <th class="py-3">Địa chỉ nhận</th>
                         <th class="py-3">Tổng tiền</th>
                         <th class="py-3 text-center">Trạng thái</th>
+                        <th class="py-3 text-center">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -61,10 +62,16 @@
                                     @default           <span class="badge bg-secondary px-3 py-2">{{ $order->order_status }}</span>
                                 @endswitch
                             </td>
+                            <td class="text-center">
+                             {{-- ✅ NÚT XEM CHI TIẾT --}}
+                                <a href="{{ route('orders.show', $order->id) }}" class="btn btn-sm btn-gold-outline">
+                                 Xem chi tiết
+                                </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">Bạn chưa có đơn hàng nào.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">Bạn chưa có đơn hàng nào.</td>
                         </tr>
                     @endforelse
                 </tbody>

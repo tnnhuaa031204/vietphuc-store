@@ -88,4 +88,25 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
         }
     }
+    // ==========================================
+    // CẬP NHẬT TRẠNG THÁI THANH TOÁN
+    // ==========================================
+    public function updatePaymentStatus(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'payment_status' => 'required|in:unpaid,pending,paid',
+        ]);
+
+        // ✅ Chỉ cho phép đổi trạng thái thanh toán cho đơn COD
+        // (đơn QR đã có logic xác nhận riêng)
+        if ($order->payment_method !== 'cod' && $validated['payment_status'] === 'paid') {
+            return back()->with('error', 'Chỉ có thể đánh dấu "đã thanh toán" cho đơn hàng COD.');
+        }
+
+        $order->update([
+            'payment_status' => $validated['payment_status'],
+        ]);
+
+        return back()->with('success', 'Cập nhật trạng thái thanh toán thành công!');
+    }
 }

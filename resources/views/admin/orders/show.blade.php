@@ -48,9 +48,17 @@
                 </a>
             </div>
 
+            {{-- Thông báo --}}
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
@@ -90,7 +98,7 @@
                                 @csrf
                                 @method('PATCH')
                                 <label class="form-label fw-bold">Cập nhật trạng thái đơn hàng:</label>
-                                <div class="input-group">
+                                <div class="input-group mb-3">
                                     <select name="order_status" class="form-select">
                                         <option value="pending"    {{ $order->order_status == 'pending'    ? 'selected' : '' }}>Chờ xác nhận</option>
                                         <option value="confirmed"  {{ $order->order_status == 'confirmed'  ? 'selected' : '' }}>Đã xác nhận</option>
@@ -101,6 +109,28 @@
                                     <button type="submit" class="btn btn-primary">Lưu</button>
                                 </div>
                             </form>
+
+                            {{-- ✅ CẬP NHẬT TRẠNG THÁI THANH TOÁN (CHỈ CHO COD) --}}
+                            @if($order->payment_method === 'cod')
+                                <form action="{{ route('admin.orders.updatePaymentStatus', $order->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <label class="form-label fw-bold">Cập nhật trạng thái thanh toán:</label>
+                                    <div class="input-group">
+                                        <select name="payment_status" class="form-select">
+                                            <option value="unpaid"  {{ $order->payment_status == 'unpaid'  ? 'selected' : '' }}>Chưa thanh toán</option>
+                                            <option value="pending" {{ $order->payment_status == 'pending' ? 'selected' : '' }}>Chờ thanh toán</option>
+                                            <option value="paid"    {{ $order->payment_status == 'paid'    ? 'selected' : '' }}>Đã thanh toán</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-success">Lưu</button>
+                                    </div>
+                                    <small class="text-muted">Áp dụng cho đơn hàng thanh toán khi nhận hàng (COD).</small>
+                                </form>
+                            @else
+                                <div class="alert alert-info small mb-0">
+                                    <i class="bi bi-info-circle"></i> Đơn hàng thanh toán QR — khách hàng tự xác nhận thanh toán.
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

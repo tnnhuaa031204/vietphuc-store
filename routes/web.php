@@ -62,6 +62,10 @@ Route::middleware('auth')->group(function () {
 
     // Lịch sử đơn hàng cá nhân
     Route::get('/my-orders', [OrderController::class, 'mine'])->name('orders.mine');
+   
+    // Xem chi tiết đơn hàng của user
+    Route::get('/my-orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
 });
 
 
@@ -76,6 +80,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->as('admin.')->group(funct
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::patch('/orders/{order}/payment-status', [AdminOrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
 
     // Quản lý sản phẩm (CRUD đầy đủ)
     Route::resource('products', AdminProductController::class);
