@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminVoucherController;   // ✅ THÊM DÒNG NÀY
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Admin\DashboardController;
 
@@ -62,10 +63,13 @@ Route::middleware('auth')->group(function () {
 
     // Lịch sử đơn hàng cá nhân
     Route::get('/my-orders', [OrderController::class, 'mine'])->name('orders.mine');
-   
+
     // Xem chi tiết đơn hàng của user
     Route::get('/my-orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
+    // Áp dụng / hủy voucher
+    Route::post('/checkout/apply-voucher', [OrderController::class, 'applyVoucher'])->name('checkout.applyVoucher');
+    Route::post('/checkout/remove-voucher', [OrderController::class, 'removeVoucher'])->name('checkout.removeVoucher');
 });
 
 
@@ -84,6 +88,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->as('admin.')->group(funct
 
     // Quản lý sản phẩm (CRUD đầy đủ)
     Route::resource('products', AdminProductController::class);
+
+    // ✅ Quản lý voucher
+    Route::resource('vouchers', AdminVoucherController::class);
 });
 
 Route::middleware('auth')->group(function () {

@@ -8,6 +8,9 @@ class Order extends Model
 {
     protected $fillable = [
         'user_id', 
+        'voucher_id',        
+        'voucher_code',      
+        'discount_amount',
         'customer_name',
         'customer_phone',
         'customer_email',
@@ -27,4 +30,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderDetail::class); 
     }
+
+    public function voucher()
+    {
+         return $this->belongsTo(Voucher::class);
+    }   
 }

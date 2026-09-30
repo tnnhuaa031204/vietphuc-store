@@ -29,6 +29,11 @@
             <a href="{{ route('admin.products.index') }}" class="mb-1">
                 <i class="bi bi-box-seam me-2"></i> Sản phẩm
             </a>
+            {{-- ✅ THÊM: Quản lý Voucher --}}
+            <div class="menu-heading">Quản lý Voucher</div>
+            <a href="{{ route('admin.vouchers.index') }}" class="mb-1">
+                <i class="bi bi-ticket-perforated me-2"></i> Voucher
+            </a>
             <hr class="text-warning">
             <form action="{{ route('logout') }}" method="POST">
                 @csrf

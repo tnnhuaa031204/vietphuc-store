@@ -19,7 +19,7 @@
         <!-- Sidebar Menu -->
         <div class="sidebar p-3" style="width: 260px;">
             <h4 class="fw-bold mb-4 text-warning text-center">HOA NGHIÊM ADMIN</h4>
-            
+
             <a href="{{ route('admin.dashboard') }}" class="mb-1">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
@@ -39,6 +39,12 @@
                 <i class="bi bi-cart-check me-2"></i> Quản lý Đơn hàng
             </a>
 
+            <!-- ✅ QUẢN LÝ VOUCHER -->
+            <div class="menu-heading">Quản lý Voucher</div>
+            <a href="{{ route('admin.vouchers.index') }}" class="mb-1">
+                <i class="bi bi-ticket-perforated me-2"></i> Voucher
+            </a>
+
             <!-- HỆ THỐNG -->
             <div class="menu-heading">Hệ thống</div>
             <a href="{{ route('products.index') }}" class="mb-1" target="_blank">
@@ -46,7 +52,7 @@
             </a>
 
             <hr class="border-secondary">
-            
+
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="btn btn-outline-warning w-100 mt-2">
@@ -55,7 +61,7 @@
             </form>
         </div>
 
-        <!-- Main Content (Nội dung chính từ code cũ của bạn) -->
+        <!-- Main Content -->
         <div class="p-4 flex-grow-1">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Quản Lý Sản Phẩm</h2>
@@ -93,7 +99,7 @@
                                     <td>{{ $product->stock }}</td>
                                     <td>
                                         <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-warning">Sửa</a>
-                                        
+
                                         <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
                                             @csrf
                                             @method('DELETE')

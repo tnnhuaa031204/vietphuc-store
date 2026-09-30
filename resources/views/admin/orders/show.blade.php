@@ -30,6 +30,11 @@
             <a href="{{ route('admin.products.index') }}" class="mb-1">
                 <i class="bi bi-box-seam me-2"></i> Sản phẩm
             </a>
+            {{-- ✅ THÊM: Quản lý Voucher --}}
+            <div class="menu-heading">Quản lý Voucher</div>
+            <a href="{{ route('admin.vouchers.index') }}" class="mb-1">
+                <i class="bi bi-ticket-perforated me-2"></i> Voucher
+            </a>
             <hr class="text-warning">
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
@@ -90,6 +95,14 @@
                                     <span class="badge bg-danger">Chưa thanh toán</span>
                                 @endif
                             </p>
+
+                            {{-- ✅ HIỂN THỊ VOUCHER NẾU CÓ --}}
+                            @if($order->voucher_code)
+                                <p><strong>Voucher:</strong>
+                                    <span class="badge bg-success">{{ $order->voucher_code }}</span>
+                                    <span class="text-success fw-bold">-{{ number_format($order->discount_amount, 0, ',', '.') }} đ</span>
+                                </p>
+                            @endif
 
                             <hr>
 
@@ -170,6 +183,22 @@
                                     @endforelse
                                 </tbody>
                                 <tfoot>
+                                    @if($order->discount_amount > 0)
+                                        <tr>
+                                            <td colspan="3" class="text-end text-muted">Tạm tính:</td>
+                                            <td class="text-end">
+                                                {{ number_format($order->total_amount + $order->discount_amount, 0, ',', '.') }} đ
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="text-end text-success">
+                                                Giảm giá ({{ $order->voucher_code }}):
+                                            </td>
+                                            <td class="text-end text-success fw-bold">
+                                                -{{ number_format($order->discount_amount, 0, ',', '.') }} đ
+                                            </td>
+                                        </tr>
+                                    @endif
                                     <tr class="table-light">
                                         <td colspan="3" class="fw-bold text-end">Tổng tiền:</td>
                                         <td class="text-end text-danger fw-bold fs-5">
