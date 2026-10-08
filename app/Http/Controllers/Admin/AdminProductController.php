@@ -14,14 +14,16 @@ class AdminProductController extends Controller
     public function index()
     {
         $products = Product::latest()->paginate(10);
+
         return view('admin.products.index', compact('products'));
     }
 
     // 2. Form thêm sản phẩm mới
     public function create()
     {
-        // Lấy danh sách danh mục để hiển thị ra dropdown (nếu view có select category)
+        // Lấy danh sách danh mục để hiển thị trong dropdown
         $categories = Category::all();
+
         return view('admin.products.create', compact('categories'));
     }
 
@@ -32,12 +34,12 @@ class AdminProductController extends Controller
             'name'        => 'required|string|max:255',
             'price'       => 'required|numeric|min:0',
             'stock'       => 'required|integer|min:0',
+            'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        // Tự động sinh slug từ tên sản phẩm (Ví dụ: "Áo Mãng Lan" -> "ao-mang-lan")
+        // Tự động tạo slug từ tên sản phẩm
         $validated['slug'] = Str::slug($request->name);
 
         // Lưu ảnh nếu có upload
@@ -48,14 +50,21 @@ class AdminProductController extends Controller
 
         Product::create($validated);
 
-        return redirect()->route('admin.products.index')->with('success', 'Thêm sản phẩm thành công!');
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'Thêm sản phẩm thành công!');
     }
 
     // 4. Form chỉnh sửa sản phẩm
     public function edit(Product $product)
     {
+        // Lấy danh sách danh mục để hiển thị trong dropdown
         $categories = Category::all();
-        return view('admin.products.edit', compact('product', 'categories'));
+
+        return view(
+            'admin.products.edit',
+            compact('product', 'categories')
+        );
     }
 
     // 5. Xử lý cập nhật sản phẩm
@@ -65,26 +74,31 @@ class AdminProductController extends Controller
             'name'        => 'required|string|max:255',
             'price'       => 'required|numeric|min:0',
             'stock'       => 'required|integer|min:0',
+            'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        // Cập nhật lại slug theo tên mới
+        // Cập nhật slug theo tên mới
         $validated['slug'] = Str::slug($request->name);
 
+        // Nếu có ảnh mới thì xóa ảnh cũ
         if ($request->hasFile('image')) {
-            // Xóa ảnh cũ nếu tồn tại
+
             if ($product->image && file_exists(public_path($product->image))) {
                 @unlink(public_path($product->image));
             }
+
             $path = $request->file('image')->store('products', 'public');
+
             $validated['image'] = 'storage/' . $path;
         }
 
         $product->update($validated);
 
-        return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công!');
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'Cập nhật sản phẩm thành công!');
     }
 
     // 6. Xóa sản phẩm
@@ -96,6 +110,8 @@ class AdminProductController extends Controller
 
         $product->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Xóa sản phẩm thành công!');
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'Xóa sản phẩm thành công!');
     }
 }

@@ -21,7 +21,7 @@
     <div class="container py-5 flex-grow-1 d-flex justify-content-center align-items-center">
         <div class="col-md-6">
             <div class="card auth-card shadow-sm p-4">
-                <h3 class="text-center mb-4" style="color: #6b1110;">ĐẮNG KÝ TÀI KHOẢN</h3>
+                <h3 class="text-center mb-4" style="color: #6b1110;">ĐĂNG KÝ TÀI KHOẢN</h3>
 
                 {{-- Khối thông báo lỗi tổng --}}
                 @if ($errors->any())
